@@ -8,8 +8,6 @@ The project showcases strong object-oriented design with modular components and 
 
 Collabrators: Hamza Mostafa Deven Kaler
 
----
-
 ## Features
 
 * 🎲 **Gameplay Loop**: Supports rolling, trading, improving buildings, mortgaging, auctions, saving/loading, and winning logic.
@@ -21,7 +19,6 @@ Collabrators: Hamza Mostafa Deven Kaler
 * 💾 **Save/Load Support**: Save and resume games from a file.
 * 🧪 **Testing Mode**: Play using rigged dice to test edge cases.
 
----
 
 ## Notes
 
@@ -29,7 +26,6 @@ Collabrators: Hamza Mostafa Deven Kaler
 * Smart pointers (`shared_ptr`) are used throughout for safe memory management.
 * Improvements are implemented via internal counters rather than decorators to simplify behavior and enforce building rules.
 
----
 
 ## Requirements
 
@@ -38,7 +34,6 @@ Collabrators: Hamza Mostafa Deven Kaler
 * **Standard C++ Libraries**
 * Terminal emulator to view ASCII output
 
----
 
 ## Build and Run Instructions
 
@@ -56,7 +51,6 @@ make watopoly
 ./watopoly -testing
 ```
 
----
 
 ## Usage
 
