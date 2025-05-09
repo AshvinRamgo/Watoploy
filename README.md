@@ -6,7 +6,7 @@ Watopoly is a C++ implementation of a Monopoly-style board game themed around th
 
 The project showcases strong object-oriented design with modular components and clean separation between game logic, user input, and display rendering. Key patterns used include the **Observer Pattern** for synchronizing display updates with game state, and the **Factory Method Pattern** for square initialization.
 
-Collabrators: Hamza Mostafa Deven Kaler
+Collabrators: Hamza Mostafa and Deven Kaler
 
 ## Features
 
