@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Watopoly UML Class Diagram</title>
+    <style>
+        /* Custom CSS for abstract classes */
+        .abstract .classTitle {
+            font-style: italic;
+        }
+        
+        body {
+            background-color: #282a36;
+            color: #f8f8f2;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        h1 {
+            color: #bd93f9;
+        }
+        
+        .diagram-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border-radius: 5px;
+        }
+
+        .mermaid {
+            border: none;
+            outline: none;
+        }
+    </style>
+</head>
+<body>    
+    <div class="diagram-container">
+        <div class="mermaid">
+            classDiagram
+            direction TB
+
+            %% ================= Observer Pattern =================
+            class Observer:::abstract {
+              +notify(whoNotified: Subject) : void
+            }
+            class Subject:::abstract {
+              #observers : vector~Observer~
+              +attach(observer: Observer) : void
+              +notifyObservers() : void
+              +~Subject() : virtual
+            }
+            class TextDisplay {
+              -board: Board*
+              -theDisplay: vector~vector~char~~
+              -previousTokenCoords: vector~pair~int,int~~
+              -lastNotifyTime: chrono::steady_clock::time_point
+              -initializeDisplay() : void
+              -drawPlayersOnBoard() : void
+              -drawPropertyOwnership() : void
+              -drawImprovements() : void
+              +TextDisplay(board: Board*) 
+              +notify(whoNotified: Subject*) : void
+              +updateBoard(cell: Cell*) : void
+              +operator<<(out: ostream&, td: TextDisplay&) : ostream&
+            }
+            Observer <|.. TextDisplay
+            Subject <|-- Board
+
+            %% ================= Game Engine =================
+            class Game {
+              -board: shared_ptr~Board~
+              -players: vector~shared_ptr~Player~~
+              -currentPlayer: int
+              -dice: shared_ptr~Dice~
+              -textDisplay: shared_ptr~TextDisplay~
+              -auctionManager: shared_ptr~AuctionManager~
+              -gameOver: bool
+              -inAuction: bool
+              -testingMode: bool
+              -handleSquareAction(player: shared_ptr~Player~, square: shared_ptr~Square~) : void
+              -checkForDoubles(d1: int, d2: int) : void
+              -startAuction(property: shared_ptr~OwnableSquare~) : void
+              -attemptToPayDebt(player: shared_ptr~Player~, amount: int, creditor: shared_ptr~Player~) : bool
+              -checkForMonopoly(player: shared_ptr~Player~, property: shared_ptr~OwnableSquare~) : void
+              +Game(testing: bool = false)
+              +initPlayers() : void
+              +runGame() : void
+              +processCommand(command: string) : void
+              +saveGame(filename: string) : void
+              +loadGame(filename: string) : void
+              +checkEndCondition() : bool
+              +startTurn() : void
+              +endTurn() : void
+              +rollDice() : void
+              +rollDice(d1: int, d2: int) : void
+              +executeTrade(playerName: string, give: string, receive: string) : void
+              +buyImprovement(propertyName: string) : void
+              +sellImprovement(propertyName: string) : void
+              +mortgageProperty(propertyName: string) : void
+              +unmortgageProperty(propertyName: string) : void
+              +declareCurrentPlayerBankrupt() : void
+              +processBankruptcy(debtor: shared_ptr~Player~, creditor: shared_ptr~Player~) : void
+              +displayCurrentPlayerAssets() : void
+              +displayAllPlayersAssets() : void
+              +displayGameState() : void
+              +getBoard() const : shared_ptr~Board~
+              +getCurrentPlayer() const : shared_ptr~Player~
+              +isGameOver() const : bool
+              +movePlayer(squareIndex: int) : void
+              +addMoney(amount: int) : void
+              +isTestingMode() const : bool
+            }
+            class CommandInterpreter {
+              -game: shared_ptr~Game~
+              -commandHandlers: unordered_map~string, function~void(const vector~string~&)~~
+              -setupDefaultCommands() : void
+              -tokenizeCommand(commandStr: string) const : vector~string~
+              +CommandInterpreter(game: shared_ptr~Game~) 
+              +interpret(command: string) : void
+              +registerCommand(name: string, handler: function~void(const vector~string~&)~) : void
+              +handleRollCommand(args: vector~string~&) : void
+              +handleTradeCommand(args: vector~string~&) : void
+              +handleImproveCommand(args: vector~string~&) : void
+              +handleMortgageCommand(args: vector~string~&) : void
+              +handleUnmortgageCommand(args: vector~string~&) : void
+              +handleAssetsCommand(args: vector~string~&) : void
+              +handleAllCommand(args: vector~string~&) : void
+              +handleSaveCommand(args: vector~string~&) : void
+              +handleBankruptCommand(args: vector~string~&) : void
+              +handleNextCommand(args: vector~string~&) : void
+              +handleMoveCommand(args: vector~string~&) : void
+              +handleAddMoneyCommand(args: vector~string~&) : void
+            }
+            class Dice {
+              +Dice()
+              +roll() : pair~int, int~
+            }
+            class SquareFactory {
+              +createSquare(position: int, name: string) : shared_ptr~Square~ $
+              +createSquareWithBoard(position: int, name: string, board: shared_ptr~Board~) : shared_ptr~Square~ $
+            }
+            class AuctionManager {
+              -winningPlayer: shared_ptr~Player~
+              -winningBid: int
+              +AuctionManager()
+              +startAuction(property: shared_ptr~OwnableSquare~, players: vector~shared_ptr~Player~>&) : void
+              +getAuctionResult() const : pair~shared_ptr~Player~, int~
+            }
+            Game --> Board
+            Game --> Dice
+            Game --> TextDisplay
+            Game --> AuctionManager
+            Game --> Player
+            Game <-- CommandInterpreter : uses
+
+            %% ================= Factory Relationship =================
+            SquareFactory ..> Square : creates
+
+            %% ================= Board =================
+            class Board {
+              -squares: vector~shared_ptr~Square~~
+              -players: vector~shared_ptr~Player~~
+              -totalCups: int
+              +Board()
+              +initBoard() : void
+              +getSquare(index: int) : shared_ptr~Square~
+              +attach(observer: Observer*) override : void
+              +notifyObservers() const override : void
+              +addCup() : void
+              +removeCup() : void
+              +getTotalCups() const : int
+              +canAddCup() const : bool
+              +getSquares() const : vector~shared_ptr~Square~>&
+              +findSquareByName(name: string) : shared_ptr~Square~
+              +getMonopolySquares(monopolyBlock: string) : vector~shared_ptr~Square~~
+              +ownsMonopoly(player: shared_ptr~Player~, monopolyBlock: string) : bool
+              +saveBoardState(out: ostream&) const : void
+              +loadBoardState(in: istream&) : void
+              +drawBoard() const : void
+              +addPlayer(player: shared_ptr~Player~) : void
+              +removePlayer(player: shared_ptr~Player~) : void
+              +getPlayers() const : vector~shared_ptr~Player~~
+            }
+            Board --> Square
+            Board o-- Player
+
+            %% ================= Cell =================
+            class Cell {
+              -row: int
+              -col: int
+              -displayChar: char
+              -playersOnCell: vector~shared_ptr~Player~~
+              -propertyName: string
+              -hasOwner: bool
+              -ownerChar: char
+              -improvements: int
+              -mortgaged: bool
+              +Cell()
+              +Cell(row: int, col: int)
+              +getDisplayChar() const : char
+              +setDisplayChar(c: char) : void
+              +addPlayer(player: shared_ptr~Player~) : void
+              +removePlayer(player: shared_ptr~Player~) : void
+              +getPlayers() const : vector~shared_ptr~Player~>&
+              +setPropertyName(name: string) : void
+              +setOwner(owner: char) : void
+              +clearOwner() : void
+              +setImprovements(level: int) : void
+              +setMortgaged(isMortgaged: bool) : void
+              +getRow() const : int
+              +getCol() const : int
+              +getPropertyName() const : string
+              +isOwned() const : bool
+              +getOwnerChar() const : char
+              +getImprovements() const : int
+              +isMortgaged() const : bool
+            }
+
+            %% ================= Player =================
+            class Player {
+              -name: string
+              -token: char
+              -money: int
+              -position: int
+              -timsCups: int
+              -inTimsLine: bool
+              -timsTurns: int
+              -bankrupt: bool
+              -consecutiveDoubles: int
+              -creditor: shared_ptr~Player~
+              -properties: vector~shared_ptr~OwnableSquare~~
+              +Player(name: string, token: char, startingMoney: int)
+              +getName() const : string
+              +getNamePieces() const : string
+              +setMoney(amount: int) : void
+              +getMoney() const : int
+              +getPlayerPosition() const : int
+              +isBankrupt() const : bool
+              +setBankrupt(status: bool) : void
+              +getOwnedProperties() const : vector~shared_ptr~OwnableSquare~~ 
+              +hasMonopoly(monopolyName: string) const : bool
+              +canTradeProperty(propertyName: string) const : bool
+              +addProperty(property: shared_ptr~OwnableSquare~) : void
+              +removeProperty(property: shared_ptr~OwnableSquare~) : void
+              +clearProperties() : void
+              +getNetWorth() const : int
+              +move(steps: int) : void
+              +setPosition(newPosition: int) : void
+              +updateMoney(amount: int) : void
+              +payRent(amount: int, to: shared_ptr~Player~) : void
+              +useRollupCup() : bool
+              +receiveRollupCup() : bool
+              +setTimsCups(cups: int) : void
+              +setInTimsLine(inLine: bool) : void
+              +isInTimsLine() const : bool
+              +setTurnsInTimsLine(turns: int) : void
+              +getTurnsInTimsLine() const : int
+              +mortgageProperty(name: string) : void
+              +unmortgageProperty(name: string) : void
+              +buyImprovement(name: string) : void
+              +sellImprovement(name: string) : void
+              +incrementDoubles() : void
+              +resetDoubles() : void
+              +getConsecutiveDoubles() const : int
+              +incrementTurnsInTimsLine() : void
+              +getTimsCups() const : int
+              +getNumGyms() const : int
+              +getNumResidences() const : int
+              +getCreditor() : shared_ptr~Player~
+            }
+
+            %% ================= Square Hierarchy =================
+            class Square:::abstract {
+              #position: int
+              #name: string
+              -tokenCoords: vector~pair~int,int~~
+              +Square(position: int, name: string)
+              +~Square() : virtual
+              +landOn(player: shared_ptr~Player~) : virtual void
+              +getName() const : string
+              +getPosition() const : int
+              +setTokenCoords(coords: vector~pair~int,int~~&) : void
+              +getTokenCoords() const : vector~pair~int,int~~&
+            }
+            class OwnableSquare:::abstract {
+              #price: int
+              #owner: shared_ptr~Player~
+              #mortgaged: bool
+              +OwnableSquare(position: int, name: string, price: int)
+              +~OwnableSquare() : virtual
+              +purchase(player: shared_ptr~Player~) : bool
+              +mortgage() : void
+              +setMortgage() : void
+              +unmortgage() : void
+              +getOwner() const : shared_ptr~Player~
+              +isOwned() const : bool
+              +isMortgaged() const : bool
+              +setOwner(player: shared_ptr~Player~) : void
+              +getOwnerInitial() const : virtual char
+              +resetOwnership() : void
+              +getPurchasePrice() const : int
+              +landOn(player: shared_ptr~Player~) : virtual void override
+            }
+            class AcademicBuilding {
+              -monopolyBlock: string
+              -improvementCost: int
+              -numImprovements: int
+              -tuition: array~int,6~
+              +AcademicBuilding(position: int, name: string, price: int, block: string, improvementCost: int, t0: int, t1: int, t2: int, t3: int, t4: int, t5: int)
+              +getMonopolyBlock() const : string
+              +getImprovementCost() const : int
+              +getImprovementLevel() const : int
+              +upgrade() : void
+              +setImprovement() : void
+              +downgrade() : void
+              +getTuition() const : int
+              +payTuition(player: shared_ptr~Player~) : void
+              +landOn(player: shared_ptr~Player~) override : void
+              +resetImprovements() : void
+            }
+            class Residence {
+              +Residence(position: int, name: string)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class Gym {
+              +Gym(position: int, name: string)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class NonOwnable:::abstract {
+              +NonOwnable(position: int, name: string)
+              +landOn(player: shared_ptr~Player~) : virtual void
+            }
+            class GoToTims {
+              +GoToTims(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class DCTimsLine {
+              +DCTimsLine(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+              +releaseOptions(player: shared_ptr~Player~) : void
+            }
+            class CollectOSAP {
+              +CollectOSAP(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class GooseNesting {
+              +GooseNesting(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class Tuition {
+              +Tuition(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class CoopFee {
+              +CoopFee(position: int)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class SLC {
+              -effects: vector~shared_ptr~CardEffect~~
+              +SLC(position: int)
+              +SLC(position: int, board: shared_ptr~Board~)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            class NeedlesHall {
+              -effects: vector~shared_ptr~CardEffect~~
+              +NeedlesHall(position: int)
+              +NeedlesHall(position: int, board: shared_ptr~Board~)
+              +landOn(player: shared_ptr~Player~) override : void
+            }
+            Square <|-- OwnableSquare
+            Square <|-- NonOwnable
+            OwnableSquare <|-- AcademicBuilding
+            OwnableSquare <|-- Residence
+            OwnableSquare <|-- Gym
+            NonOwnable <|-- GoToTims
+            NonOwnable <|-- DCTimsLine
+            NonOwnable <|-- CollectOSAP
+            NonOwnable <|-- GooseNesting
+            NonOwnable <|-- Tuition
+            NonOwnable <|-- CoopFee
+            NonOwnable <|-- SLC
+            NonOwnable <|-- NeedlesHall
+
+            %% ================= Card Effects =================
+            class CardEffect:::abstract {
+              +apply(player: shared_ptr~Player~) : virtual void
+              +~CardEffect() : virtual
+            }
+            class MoveEffect {
+              -spaces_moved: int
+              +MoveEffect(spaces_moved: int)
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            class GainMoneyEffect {
+              -money_gained: int
+              +GainMoneyEffect(money_gained: int)
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            class LoseMoneyEffect {
+              -money_lost: int
+              +LoseMoneyEffect(money_lost: int)
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            class GoToTimsLineEffect {
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            class CollectOSAPEffect {
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            class RollupCupEffect {
+              -board: shared_ptr~Board~
+              +RollupCupEffect(board: shared_ptr~Board~)
+              +apply(player: shared_ptr~Player~) override : void
+            }
+            CardEffect <|.. MoveEffect
+            CardEffect <|.. GainMoneyEffect
+            CardEffect <|.. LoseMoneyEffect
+            CardEffect <|.. GoToTimsLineEffect
+            CardEffect <|.. CollectOSAPEffect
+            CardEffect <|.. RollupCupEffect
+            SLC --> CardEffect
+            NeedlesHall --> CardEffect
+        </div>
+    </div>
+
+    <!-- Include Mermaid JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            theme: 'dark',
+            securityLevel: 'loose',
+            startOnLoad: true
+        });
+    </script>
+</body>
+</html>
